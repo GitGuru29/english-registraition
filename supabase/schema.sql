@@ -17,9 +17,18 @@ create table if not exists public.admin_users (
 );
 alter table public.admin_users enable row level security;
 
+-- Raw SQL-created tables also need explicit grants. The public client gets only
+-- INSERT on registrations; it never receives read, update, or delete access.
+grant usage on schema public to anon, authenticated;
+grant insert on table public.registrations to anon, authenticated;
+grant select on table public.admin_users to authenticated;
+
 -- Public visitors can submit only. They cannot read, edit, or delete any records.
 create policy "Public can submit registrations" on public.registrations
   for insert to anon, authenticated with check (true);
+
+create policy "Administrators can inspect their own grant" on public.admin_users
+  for select to authenticated using ((select auth.uid()) = user_id);
 
 create policy "Administrators can read registrations" on public.registrations
   for select to authenticated using (
