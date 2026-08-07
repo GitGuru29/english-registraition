@@ -10,6 +10,7 @@ export default function App() {
   const [success, setSuccess] = useState(() => {
     return Boolean(localStorage.getItem('grade6_registered_submitted'))
   })
+  const [regNo, setRegNo] = useState<number | undefined>(undefined)
 
   useEffect(() => {
     document.title = copy.appName
@@ -32,7 +33,16 @@ export default function App() {
             <h2 id="form-title" className="text-xl font-bold tracking-[-0.02em] sm:text-2xl">{copy.formTitle}</h2>
             <p className="mx-auto mt-1.5 max-w-sm text-xs text-slate-600 sm:text-sm">{copy.formHelp}</p>
           </div>
-          {success ? <SuccessState /> : <RegistrationForm onSuccess={() => setSuccess(true)} />}
+          {success ? (
+            <SuccessState regNo={regNo} />
+          ) : (
+            <RegistrationForm
+              onSuccess={(no) => {
+                setRegNo(no)
+                setSuccess(true)
+              }}
+            />
+          )}
         </section>
       </div>
       <p className="sinhala py-4 text-center text-[11px] text-slate-500 sm:text-xs">{copy.privacyNote}</p>

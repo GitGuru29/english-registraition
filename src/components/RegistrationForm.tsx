@@ -3,7 +3,7 @@ import { copy } from '../lib/copy'
 import { isSupabaseConfigured, supabase } from '../lib/supabase'
 import { normalizeSriLankanMobile, validateName } from '../lib/validation'
 
-type Props = { onSuccess: () => void }
+type Props = { onSuccess: (regNo?: number) => void }
 type FieldErrors = { name?: string; phone?: string; form?: string }
 
 async function getClientIpOrIdentifier(): Promise<string> {
@@ -34,7 +34,7 @@ async function getClientIpOrIdentifier(): Promise<string> {
     }
   } catch {}
 
-  // 4. Device Fingerprint fallback (ensures identifier is NEVER NULL)
+  // 4. Device Fingerprint fallback
   let devId = localStorage.getItem('grade6_device_id')
   if (!devId) {
     devId = 'DEV-' + (crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2))
@@ -89,11 +89,15 @@ export default function RegistrationForm({ onSuccess }: Props) {
         return
       }
 
-      const { error } = await supabase.from('registrations').insert({
-        student_name: studentName,
-        whatsapp_number: whatsapp,
-        ip_address: clientIp
-      })
+      const { data, error } = await supabase
+        .from('registrations')
+        .insert({
+          student_name: studentName,
+          whatsapp_number: whatsapp,
+          ip_address: clientIp
+        })
+        .select('reg_no')
+        .single()
 
       if (error) {
         console.error('Supabase insert error:', error)
@@ -101,8 +105,13 @@ export default function RegistrationForm({ onSuccess }: Props) {
         return
       }
 
+      const regNo = data?.reg_no ? Number(data.reg_no) : undefined
       localStorage.setItem('grade6_registered_submitted', 'true')
-      onSuccess()
+      if (regNo) {
+        localStorage.setItem('grade6_registered_no', String(regNo))
+      }
+
+      onSuccess(regNo)
     } catch (err) {
       console.error('Submission failed:', err)
       setErrors({ form: copy.networkError })

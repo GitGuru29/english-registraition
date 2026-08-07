@@ -2,6 +2,7 @@
 -- only public registration inserts. Create the admin user in Authentication > Users.
 create table if not exists public.registrations (
   id uuid primary key default gen_random_uuid(),
+  reg_no bigint generated always as identity,
   student_name text not null check (char_length(student_name) between 2 and 100),
   whatsapp_number text not null check (whatsapp_number ~ '^\+94[0-9]{9}$'),
   ip_address text,
