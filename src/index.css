@@ -1,0 +1,12 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Noto+Sans+Sinhala:wght@500;600;700;800&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * { @apply border-slate-200; }
+  body { @apply min-h-screen bg-[#f4f6f3] font-sans text-ink antialiased; }
+  button, input { font: inherit; }
+}
+
+.sinhala { font-family: 'Noto Sans Sinhala', sans-serif; }
