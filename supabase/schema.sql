@@ -4,10 +4,12 @@ create table if not exists public.registrations (
   id uuid primary key default gen_random_uuid(),
   student_name text not null check (char_length(student_name) between 2 and 100),
   whatsapp_number text not null check (whatsapp_number ~ '^\+94[0-9]{9}$'),
+  ip_address text,
   created_at timestamptz not null default now()
 );
 
 create unique index if not exists registrations_whatsapp_unique on public.registrations (whatsapp_number);
+create unique index if not exists registrations_ip_unique on public.registrations (ip_address);
 alter table public.registrations enable row level security;
 
 -- This allow-list makes an authenticated account an administrator. It has no public

@@ -14,6 +14,10 @@ export default function RegistrationForm({ onSuccess }: Props) {
 
   const submit = async (event: FormEvent) => {
     event.preventDefault()
+    if (localStorage.getItem('grade6_registered_submitted')) {
+      setErrors({ form: copy.ipDuplicate })
+      return
+    }
     const studentName = validateName(name)
     const whatsapp = normalizeSriLankanMobile(phone)
     const next: FieldErrors = {}
@@ -23,13 +27,32 @@ export default function RegistrationForm({ onSuccess }: Props) {
     if (Object.keys(next).length) return
     if (!supabase || !isSupabaseConfigured) { setErrors({ form: copy.notConfigured }); return }
     setSubmitting(true)
+
     try {
-      const { error } = await supabase.from('registrations').insert({ student_name: studentName, whatsapp_number: whatsapp })
+      let clientIp: string | null = null
+      try {
+        const ipRes = await fetch('https://api.ipify.org?format=json', { cache: 'no-store' })
+        if (ipRes.ok) {
+          const ipData = await ipRes.json()
+          clientIp = ipData.ip || null
+        }
+      } catch {
+        console.warn('Unable to fetch client IP address')
+      }
+
+      const { error } = await supabase.from('registrations').insert({
+        student_name: studentName,
+        whatsapp_number: whatsapp,
+        ip_address: clientIp
+      })
+
       if (error) {
         console.error('Supabase error:', error)
         setErrors({ form: error.code === '23505' ? copy.duplicate : copy.genericError })
         return
       }
+
+      localStorage.setItem('grade6_registered_submitted', 'true')
       onSuccess()
     } catch (err) {
       console.error('Submission failed:', err)
