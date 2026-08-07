@@ -26,11 +26,15 @@ export default function RegistrationForm({ onSuccess }: Props) {
     try {
       const { error } = await supabase.from('registrations').insert({ student_name: studentName, whatsapp_number: whatsapp })
       if (error) {
+        console.error('Supabase error:', error)
         setErrors({ form: error.code === '23505' ? copy.duplicate : copy.genericError })
         return
       }
       onSuccess()
-    } catch { setErrors({ form: copy.networkError }) }
+    } catch (err) {
+      console.error('Submission failed:', err)
+      setErrors({ form: copy.networkError })
+    }
     finally { setSubmitting(false) }
   }
 
