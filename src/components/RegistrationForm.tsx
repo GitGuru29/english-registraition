@@ -75,29 +75,31 @@ export default function RegistrationForm({ onSuccess }: Props) {
     try {
       const clientIp = await getClientIpOrIdentifier()
 
-      // Pre-check database for existing IP/Device registration
-      const { data: existing } = await supabase
-        .from('registrations')
-        .select('id')
-        .eq('ip_address', clientIp)
-        .limit(1)
+      // Optional pre-check for existing IP (ignore errors if select is restricted by RLS)
+      try {
+        const { data: existing } = await supabase
+          .from('registrations')
+          .select('id')
+          .eq('ip_address', clientIp)
+          .limit(1)
 
-      if (existing && existing.length > 0) {
-        localStorage.setItem('grade6_registered_submitted', 'true')
-        setErrors({ form: copy.ipDuplicate })
-        setSubmitting(false)
-        return
+        if (existing && existing.length > 0) {
+          localStorage.setItem('grade6_registered_submitted', 'true')
+          setErrors({ form: copy.ipDuplicate })
+          setSubmitting(false)
+          return
+        }
+      } catch {
+        // Ignore RLS read restriction
       }
 
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('registrations')
         .insert({
           student_name: studentName,
           whatsapp_number: whatsapp,
           ip_address: clientIp
         })
-        .select('reg_no')
-        .single()
 
       if (error) {
         console.error('Supabase insert error:', error)
@@ -105,13 +107,8 @@ export default function RegistrationForm({ onSuccess }: Props) {
         return
       }
 
-      const regNo = data?.reg_no ? Number(data.reg_no) : undefined
       localStorage.setItem('grade6_registered_submitted', 'true')
-      if (regNo) {
-        localStorage.setItem('grade6_registered_no', String(regNo))
-      }
-
-      onSuccess(regNo)
+      onSuccess()
     } catch (err) {
       console.error('Submission failed:', err)
       setErrors({ form: copy.networkError })
